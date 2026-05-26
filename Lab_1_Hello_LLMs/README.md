@@ -302,18 +302,76 @@ Re-run `python Lab_1_Hello_LLMs/compare.py`. You'll see Ollama's response appear
 
 ### 4. Median latency, not single-shot
 
-Modify `compare.py` to send the same prompt 5 times against each provider and compute the median elapsed time. Notice the variance: first-call cold-start vs. subsequent warm calls.
+Right now `compare.py` calls `ask()` once per provider. A single slow call — model cold-start, garbage-collection pause, a network blip — skews the elapsed-time number. Median across multiple runs is more honest.
+
+Modify the comparison loop at the bottom of `compare.py` (lines 28-35). Replace it with this version that runs each prompt N times and reports the median:
+
+```python
+import statistics
+
+N = 5
+
+print(f"Prompt: {PROMPT}\n")
+
+for llm, label in [(ollama, "Ollama / llama3.2:3b"),
+                   (openai, "OpenAI / gpt-4o-mini")]:
+    times = []
+    for i in range(N):
+        text, elapsed = ask(llm)
+        times.append(elapsed)
+        print(f"  run {i+1}: {elapsed:.2f}s")
+    median = statistics.median(times)
+    print(f"=== {label} — median of {N} runs: {median:.2f}s ===")
+    print(text)   # last response — eyeball quality
+    print()
+```
+
+Add `import statistics` at the top with the other imports (it's in Python's standard library — nothing to install).
+
+Re-run `python Lab_1_Hello_LLMs/compare.py`. Typical pattern:
+
+- **Ollama:** first call is meaningfully slower than calls 2-5 — that's the 3B model warming up in CPU memory. The median ignores that outlier.
+- **OpenAI:** no local warm-up, so all 5 calls cluster more tightly, but you'll still see network-jitter variance of a few hundred ms.
+
+**Cost note:** this sends the prompt 10 times total (5 runs × 2 providers). For OpenAI gpt-4o-mini that's a fraction of a cent — but worth understanding that "measure latency properly" comes with a real (small) bill on cloud providers.
 
 ### 5. Add Anthropic as a third provider
 
-`langchain-anthropic` is already in the image. Get an API key from [console.anthropic.com](https://console.anthropic.com) (~$5 credit), add `ANTHROPIC_API_KEY=...` to `.env`, then:
+`langchain-anthropic` is already in the pre-built image — no `pip install` needed. Three steps to add Claude alongside Ollama and OpenAI.
+
+**Step 1: Get an Anthropic API key.** Go to [console.anthropic.com](https://console.anthropic.com), sign up (or sign in), grab the $5 in starter credits, and create an API key. It'll look like `sk-ant-...`.
+
+**Step 2: Add the key to `.env`.** Open `.env` in this Codespace (the file `postCreate.sh` copied from `.env.example` on Codespace startup) and add a line:
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+The `load_dotenv()` call at the top of `compare.py` auto-reads this into environment variables, and `ChatAnthropic` picks it up from there — no need to pass the key explicitly in code.
+
+**Step 3: Add three lines to `compare.py`.**
+
+a) Add the import near the other LangChain imports (after line 8):
 
 ```python
 from langchain_anthropic import ChatAnthropic
-anthropic = ChatAnthropic(model="claude-haiku-4-5")
 ```
 
-Add it to the loop in `compare.py`. Now you've got a three-way comparison.
+b) Add the constructor next to `ollama` and `openai` (after line 26):
+
+```python
+anthropic = ChatAnthropic(model="claude-haiku-4-5", temperature=0)
+```
+
+c) Add a third entry to the comparison loop (line 30-31):
+
+```python
+for llm, label in [(ollama, "Ollama / llama3.2:3b"),
+                   (openai, "OpenAI / gpt-4o-mini"),
+                   (anthropic, "Anthropic / claude-haiku-4-5")]:
+```
+
+Re-run `python Lab_1_Hello_LLMs/compare.py`. You'll get a three-way side-by-side: local Llama, cloud OpenAI, cloud Anthropic. Notice that the answers vary in *style* even with the same prompt and same `messages` shape — different model lineages produce noticeably different prose. The `bonus/anthropic/` folder goes deeper on what's specifically different about Anthropic's API and where Claude tends to shine for network workflows.
 
 ---
 
