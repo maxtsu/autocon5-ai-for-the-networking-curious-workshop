@@ -1,0 +1,38 @@
+# AutoCon 5 workshop lab topology
+#
+#         AS 65002 (external)
+#         ┌──────┐
+#         │  r3  │
+#         └───┬──┘
+#             │ e1-1 ↔ e1-2
+#             │ 10.1.13.0/30 (eBGP)
+#         ┌───┴──┐                          ┌──────┐
+#         │  r1  │── e1-1 ──── e1-1 ────────│  r2  │
+#         └──────┘  10.1.12.0/30            └──────┘
+#                   OSPF area 0 + iBGP
+#         AS 65001 (internal)
+
+name: autocon5
+
+topology:
+  kinds:
+    nokia_srlinux:
+      image: ghcr.io/nokia/srlinux:25.10.2
+      type: ixrd2l
+
+  nodes:
+    r1:
+      kind: nokia_srlinux
+      startup-config: configs/r1.cfg
+
+    r2:
+      kind: nokia_srlinux
+      startup-config: configs/r2.cfg
+
+    r3:
+      kind: nokia_srlinux
+      startup-config: configs/r3.cfg
+
+  links:
+    - endpoints: ["r1:e1-1", "r2:e1-1"]
+    - endpoints: ["r1:e1-2", "r3:e1-1"]

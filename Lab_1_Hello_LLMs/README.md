@@ -1,0 +1,300 @@
+# Lab 1: Hello LLMs — Local and Cloud
+
+**Time:** ~25 minutes
+
+Make your first calls to a local LLM (Ollama running `llama3.2:3b`) and a cloud LLM (OpenAI's `gpt-4o-mini`). By the end of this lab you'll have:
+
+- A working sense of how local vs. cloud LLMs differ in speed, quality, and cost
+- Three small Python scripts that call each provider, including one that switches providers with a single line of code
+- Hands-on time in Open WebUI — a chat GUI that talks to your local Ollama
+
+This lab doesn't touch the network topology — it's purely about getting comfortable calling LLMs.
+
+## Prerequisites
+
+- You launched the Codespace and saw the welcome banner from `postCreate.sh`.
+- `ollama --version` returns `0.23.1`.
+- Your `.env` file has a real `OPENAI_API_KEY` (we'll verify this in Step 4).
+
+## Concepts
+
+- **Local vs cloud LLMs.** Local (Ollama) means the model runs on your Codespace's CPU — private, free, slower, smaller. Cloud (OpenAI) means a request leaves your machine — faster, sharper answers, pay-per-token.
+- **The same API shape.** Both Ollama and OpenAI expose chat-completion APIs with the same `messages` array structure. This is not a coincidence; Ollama deliberately mirrors OpenAI.
+- **LangChain as a thin abstraction.** Write your application code once against LangChain's interface, and swap providers with one constructor change. We'll exploit this heavily in Labs 2-4.
+
+---
+
+## Step 1: Start the Ollama daemon
+
+Ollama doesn't auto-start in this Codespace — we start it deliberately so you see the "infrastructure must run before you can use it" pattern. (This same pattern shows up for containerlab in Lab 3.)
+
+In a Codespace terminal:
+
+```bash
+ollama serve > /tmp/ollama.log 2>&1 &
+sleep 3
+```
+
+Verify it's responding:
+
+```bash
+curl -s http://localhost:11434/ && echo "  ← Ollama is responding"
+```
+
+**Expected output:**
+```
+Ollama is running  ← Ollama is responding
+```
+
+Confirm the baked-in model is available:
+
+```bash
+ollama list
+```
+
+**Expected:** `llama3.2:3b` with size `2.0 GB`.
+
+> **Troubleshooting:** If `curl` fails with `Failed to connect`, the daemon didn't start. Check `cat /tmp/ollama.log` for errors. The most common cause is port 11434 already in use — `pkill ollama` and retry.
+
+---
+
+## Step 2: First call via the CLI
+
+The fastest way to talk to a local LLM is the `ollama` CLI. Try this:
+
+```bash
+ollama run llama3.2:3b "Explain BGP in one sentence."
+```
+
+**Expected:** A 1-2 sentence response about BGP, streamed token-by-token. The first call may take 5-10 seconds to "warm up" while the model loads into memory; subsequent calls return in 1-2 seconds.
+
+Try a couple more prompts to get a feel for what a 3B-parameter model can and can't do:
+
+```bash
+ollama run llama3.2:3b "What is the default OSPF hello interval?"
+ollama run llama3.2:3b "Write an SR Linux command to show BGP neighbors."
+```
+
+Notice that responses on well-known topics are reasonable, but the model may fabricate specifics on niche topics (this is hallucination — a core theme of Lab 2).
+
+---
+
+## Step 3: First call via Python (raw Ollama SDK)
+
+CLI is fine for spot checks. For automation, we use Python.
+
+Create `hello_ollama.py` in this lab folder with the following content:
+
+```python
+"""hello_ollama.py — first call to the local LLM via Python."""
+from ollama import Client
+
+client = Client(host="http://localhost:11434")
+
+response = client.chat(
+    model="llama3.2:3b",
+    messages=[
+        {"role": "user", "content": "Explain OSPF in one sentence."}
+    ],
+)
+
+print(response["message"]["content"])
+```
+
+Run it:
+
+```bash
+python Lab_1_Hello_LLMs/hello_ollama.py
+```
+
+**Expected output:** A 1-2 sentence explanation of OSPF.
+
+Notice the API structure: `client.chat()` takes a list of `messages` (each a dict with `role` and `content`), and returns a dict where the answer lives at `response["message"]["content"]`. That's the same shape OpenAI uses — a deliberate design choice on Ollama's part.
+
+---
+
+## Step 4: First call to OpenAI
+
+Time to make a cloud LLM call. First, verify your key is loading.
+
+Open `.env` in the file explorer (root of the workspace) and confirm `OPENAI_API_KEY=sk-...` has a real value, not blank. If it's still blank, grab a key from [platform.openai.com/api-keys](https://platform.openai.com/api-keys) and make sure your account has at least $5 in prepaid credit.
+
+Create `hello_openai.py` in this lab folder:
+
+```python
+"""hello_openai.py — first call to OpenAI's gpt-4o-mini via Python."""
+from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()  # reads .env, sets OPENAI_API_KEY in environment
+client = OpenAI()
+
+response = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[
+        {"role": "user", "content": "Explain OSPF in one sentence."}
+    ],
+)
+
+print(response.choices[0].message.content)
+print(f"\nTokens: prompt={response.usage.prompt_tokens}, completion={response.usage.completion_tokens}")
+```
+
+Run it:
+
+```bash
+python Lab_1_Hello_LLMs/hello_openai.py
+```
+
+**Expected:** A 1-2 sentence OSPF explanation, followed by a `Tokens: ...` line showing roughly 13 prompt tokens and 30-50 completion tokens. Cost is a fraction of a cent.
+
+Compare against Step 3:
+- **Speed:** OpenAI typically comes back in 0.5-1.5s — faster than Ollama (2-5s).
+- **Quality:** gpt-4o-mini is a stronger model than llama3.2:3b. You'll usually notice the answers are tighter and more precise.
+- **Cost:** You pay per token. Track it from the start.
+
+> **Troubleshooting:** If you see `AuthenticationError`, your key isn't loading. Diagnose with:
+> ```bash
+> python -c "import os; from dotenv import load_dotenv; load_dotenv(); k = os.getenv('OPENAI_API_KEY'); print(k[:10] + '...' if k else 'KEY NOT SET')"
+> ```
+> Should print the first 10 chars of your key. If it says `KEY NOT SET`, `.env` isn't being read — make sure you're running Python from the workspace root (or the lab folder, since `load_dotenv()` walks up looking for `.env`).
+>
+> If you see `RateLimitError` saying "insufficient quota," your key is valid but the OpenAI account has no credit. Add $5 at [platform.openai.com/settings/organization/billing](https://platform.openai.com/settings/organization/billing).
+
+---
+
+## Step 5: Same code, both providers — via LangChain
+
+Here's the punchline of this lab: with LangChain, the exact same Python code can drive either provider. You swap them by changing the constructor.
+
+Create `compare.py` in this lab folder:
+
+```python
+"""
+compare.py — Send the same prompt to both Ollama and OpenAI,
+print responses side-by-side. Demonstrates LangChain's provider abstraction.
+"""
+import time
+from dotenv import load_dotenv
+from langchain_ollama import ChatOllama
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage
+
+load_dotenv()
+
+PROMPT = "In one sentence, explain why BGP uses TCP instead of UDP."
+
+
+def ask(llm):
+    """Send the prompt, time the call, return (response_text, elapsed_seconds)."""
+    start = time.time()
+    response = llm.invoke([HumanMessage(content=PROMPT)])
+    elapsed = time.time() - start
+    return response.content, elapsed
+
+
+# Same interface, different providers
+ollama = ChatOllama(model="llama3.2:3b", base_url="http://localhost:11434")
+openai = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+
+print(f"Prompt: {PROMPT}\n")
+
+for llm, label in [(ollama, "Ollama / llama3.2:3b"),
+                   (openai, "OpenAI / gpt-4o-mini")]:
+    text, elapsed = ask(llm)
+    print(f"=== {label} ({elapsed:.2f}s) ===")
+    print(text)
+    print()
+```
+
+Run it:
+
+```bash
+python Lab_1_Hello_LLMs/compare.py
+```
+
+**Expected output:** Two responses to the same prompt, with elapsed time stamped on each section. Typical timing:
+- OpenAI: 0.5-1.5s
+- Ollama: 2-5s
+
+Notice what's identical and what's different:
+
+- **Identical:** the call site is `llm.invoke([HumanMessage(...)])`. The same function call works for both providers.
+- **Different:** the constructor — `ChatOllama(...)` vs `ChatOpenAI(...)`.
+
+This is the abstraction we'll lean on in Labs 2-4. Application code doesn't need to know whether it's talking to a local or cloud model, which makes the "swap providers based on data sensitivity" pattern from the AC5 talk a one-line change in practice.
+
+---
+
+## Step 6: The chat GUI — Open WebUI
+
+For exploration (as opposed to scripting), a chat GUI is often nicer than the CLI. Open WebUI is already running in this Codespace.
+
+In VS Code's **Ports** panel (bottom of the screen, click "Ports" tab if you don't see it):
+
+1. Find port **8080** labeled **"Open WebUI"**.
+2. It probably already auto-opened in a preview pane. If not, click the globe icon next to port 8080 to open in browser.
+
+In Open WebUI:
+1. There's no sign-up flow — `WEBUI_AUTH=False` was set in the workshop config.
+2. Pick `llama3.2:3b` from the model dropdown (top-left of the chat area). If the dropdown is empty, you didn't start Ollama in Step 1 — go back and do that, then refresh this page.
+3. Type a prompt in the chat box at the bottom and hit enter.
+
+The responses stream the same way as Steps 2-3, but with conversation history you can scroll through. This is just a UI on top of the same Ollama daemon you've been using; if you stopped Ollama with `pkill ollama`, the UI would also stop working.
+
+---
+
+## Going Further
+
+If you finish the core lab early — or want to dig deeper later — try one or more of these:
+
+### 1. A bigger Ollama model
+
+`llama3.2:3b` is small and fast. `llama3.2:7b` is roughly 4x bigger and noticeably stronger.
+
+```bash
+ollama pull llama3.2:7b   # ~4 GB download, 1-2 min on Codespace network
+```
+
+Edit `hello_ollama.py` and `compare.py` to use `llama3.2:7b` instead of `llama3.2:3b`. Re-run. Notice both the quality improvement and the latency hit (probably 2-3x slower).
+
+### 2. gpt-4o vs gpt-4o-mini
+
+Change `model="gpt-4o-mini"` to `model="gpt-4o"` in `hello_openai.py`. Re-run. Compare:
+- Response quality (gpt-4o is meaningfully stronger on complex prompts)
+- Token costs (`response.usage.completion_tokens` × the per-token price — gpt-4o is ~10x the cost per token of gpt-4o-mini)
+
+The decision between them is rarely "which is better" and usually "which is good enough for this use case."
+
+### 3. Streaming responses
+
+Both providers support streaming. With LangChain:
+
+```python
+for chunk in llm.stream([HumanMessage(content="Explain BGP path selection")]):
+    print(chunk.content, end="", flush=True)
+print()
+```
+
+Replace `llm.invoke(...)` in your script with this loop. Tokens print as they're generated — useful for chatty UIs.
+
+### 4. Median latency, not single-shot
+
+Modify `compare.py` to send the same prompt 5 times against each provider and compute the median elapsed time. Notice the variance: first-call cold-start vs. subsequent warm calls.
+
+### 5. Add Anthropic as a third provider
+
+`langchain-anthropic` is already in the image. Get an API key from [console.anthropic.com](https://console.anthropic.com) (~$5 credit), add `ANTHROPIC_API_KEY=...` to `.env`, then:
+
+```python
+from langchain_anthropic import ChatAnthropic
+anthropic = ChatAnthropic(model="claude-haiku-4-5")
+```
+
+Add it to the loop in `compare.py`. Now you've got a three-way comparison.
+
+---
+
+## What's next
+
+In **Lab 2 (Prompt Engineering)** we'll stop accepting whatever the LLM gives back and start *constraining* it — few-shot examples, JSON-schema output, and the specific patterns that matter for network configuration tasks. We'll use the LangChain interface from Step 5 throughout, so the provider switch becomes free.

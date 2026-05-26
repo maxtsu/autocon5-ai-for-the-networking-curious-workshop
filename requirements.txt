@@ -1,0 +1,23 @@
+# AutoCon 5 AI Workshop — Python dependencies
+# Pinned to major.minor for stability with patch-level updates allowed.
+
+# LangChain framework + integrations
+langchain>=0.3,<0.4
+langchain-openai>=0.2,<0.3
+langchain-ollama>=0.2,<0.3
+langchain-community>=0.3,<0.4
+
+# OpenAI Python SDK (also pulled transitively by langchain-openai;
+# explicit pin lets us use it directly in labs without LangChain)
+openai>=1.50,<2
+
+# Streamlit for the UI lab
+streamlit>=1.39,<2
+
+# Utilities
+requests>=2.32
+python-dotenv>=1.0
+
+# Jupyter for notebook-based exploration / debugging
+jupyter>=1.0
+
