@@ -268,15 +268,37 @@ The decision between them is rarely "which is better" and usually "which is good
 
 ### 3. Streaming responses
 
-Both providers support streaming. With LangChain:
+Both providers support streaming. Instead of getting the whole response at once with `llm.invoke(...)`, you get chunks as the model generates them — useful for chatty UIs where the user sees text appear word-by-word instead of waiting in silence.
+
+In `compare.py`, the `ask()` function currently looks like this (lines 16-21):
 
 ```python
-for chunk in llm.stream([HumanMessage(content="Explain BGP path selection")]):
-    print(chunk.content, end="", flush=True)
-print()
+def ask(llm):
+    """Send the prompt, time the call, return (response_text, elapsed_seconds)."""
+    start = time.time()
+    response = llm.invoke([HumanMessage(content=PROMPT)])
+    elapsed = time.time() - start
+    return response.content, elapsed
 ```
 
-Replace `llm.invoke(...)` in your script with this loop. Tokens print as they're generated — useful for chatty UIs.
+Replace it with this streaming version:
+
+```python
+def ask(llm):
+    """Stream the response chunk-by-chunk, return (full_text, elapsed_seconds)."""
+    start = time.time()
+    chunks = []
+    for chunk in llm.stream([HumanMessage(content=PROMPT)]):
+        print(chunk.content, end="", flush=True)   # print each chunk as it arrives
+        chunks.append(chunk.content)
+    print()                                         # newline once the stream ends
+    elapsed = time.time() - start
+    return "".join(chunks), elapsed
+```
+
+Re-run `python Lab_1_Hello_LLMs/compare.py`. You'll see Ollama's response appear word-by-word in real time, then OpenAI's. The `text` value returned by `ask()` is still the full response, so the existing `print(text)` line below the loop will redundantly re-print each answer after streaming — that's fine for the demo (and confirms the chunks were captured), or you can delete that line for a cleaner output.
+
+**Why this matters:** streaming doesn't make the model faster — total elapsed time is the same. What it changes is *perceived* latency: the user sees motion immediately instead of staring at a frozen prompt for 3 seconds. Every chat UI you've ever used (ChatGPT, Claude, Open WebUI in Step 5) does this.
 
 ### 4. Median latency, not single-shot
 
