@@ -250,13 +250,13 @@ If you finish the core lab early — or want to dig deeper later — try one or 
 
 ### 1. A bigger Ollama model
 
-`llama3.2:3b` is small and fast. `llama3.2:7b` is roughly 4x bigger and noticeably stronger.
+`llama3.2:3b` is small and fast. `llama3.1:8b` is roughly 2-3x bigger and noticeably stronger — Meta's previous-generation 8B sits in the sweet spot of "fits in a 16GB Codespace, meaningfully better on network reasoning."
 
 ```bash
-ollama pull llama3.2:7b   # ~4 GB download, 1-2 min on Codespace network
+ollama pull llama3.1:8b   # ~4.7 GB download, 1-2 min on Codespace network
 ```
 
-Edit `hello_ollama.py` and `compare.py` to use `llama3.2:7b` instead of `llama3.2:3b`. Re-run. Notice both the quality improvement and the latency hit (probably 2-3x slower).
+Edit `hello_ollama.py` and `compare.py` to use `llama3.1:8b` instead of `llama3.2:3b`. Re-run. Notice both the quality improvement and the latency hit (probably 2-3x slower).
 
 ### 2. gpt-4o vs gpt-4o-mini
 
