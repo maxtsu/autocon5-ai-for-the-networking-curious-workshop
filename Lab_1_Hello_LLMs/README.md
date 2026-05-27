@@ -337,11 +337,19 @@ Re-run `python Lab_1_Hello_LLMs/compare.py`. Typical pattern:
 
 ### 5. Add Anthropic as a third provider
 
-`langchain-anthropic` is already in the pre-built image — no `pip install` needed. Three steps to add Claude alongside Ollama and OpenAI.
+Anthropic Claude isn't pre-installed in the workshop image (only Ollama + OpenAI are baked into the core dependencies). Adding it as a third provider takes four steps.
 
-**Step 1: Get an Anthropic API key.** Go to [console.anthropic.com](https://console.anthropic.com), sign up (or sign in), grab the $5 in starter credits, and create an API key. It'll look like `sk-ant-...`.
+**Step 1: Install the LangChain Anthropic integration.**
 
-**Step 2: Add the key to `.env`.** Open `.env` in this Codespace (the file `postCreate.sh` copied from `.env.example` on Codespace startup) and add a line:
+```bash
+pip install langchain-anthropic
+```
+
+Takes a few seconds. Only needed once per Codespace.
+
+**Step 2: Get an Anthropic API key.** Go to [console.anthropic.com](https://console.anthropic.com), sign up (or sign in), grab the $5 in starter credits, and create an API key. It'll look like `sk-ant-...`.
+
+**Step 3: Add the key to `.env`.** Open `.env` in this Codespace (the file `postCreate.sh` copied from `.env.example` on Codespace startup) and add a line:
 
 ```
 ANTHROPIC_API_KEY=sk-ant-...
@@ -349,7 +357,7 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 The `load_dotenv()` call at the top of `compare.py` auto-reads this into environment variables, and `ChatAnthropic` picks it up from there — no need to pass the key explicitly in code.
 
-**Step 3: Add three lines to `compare.py`.**
+**Step 4: Add three lines to `compare.py`.**
 
 a) Add the import near the other LangChain imports (after line 8):
 
