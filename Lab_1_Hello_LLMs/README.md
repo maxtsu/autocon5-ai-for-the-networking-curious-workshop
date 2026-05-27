@@ -342,8 +342,10 @@ Anthropic Claude isn't pre-installed in the workshop image (only Ollama + OpenAI
 **Step 1: Install the LangChain Anthropic integration.**
 
 ```bash
-pip install langchain-anthropic
+pip install "langchain-anthropic<1.0"
 ```
+
+The `<1.0` pin matters. The latest `langchain-anthropic` (1.x) requires `langchain-core` 1.x, but the rest of the workshop image is on the `langchain-core` 0.3.x line (paired with `langchain-openai` 0.2.x and `langchain-ollama` 0.2.x). Installing unpinned breaks the other providers. The 0.3.x line of `langchain-anthropic` is compatible.
 
 Takes a few seconds. Only needed once per Codespace.
 
