@@ -45,7 +45,7 @@ See [WORKSHOP_FAQ.md](WORKSHOP_FAQ.md) for the full pre-workshop checklist.
 6. In VS Code's **Ports** panel (bottom of the screen), you should see two ports forwarded: 11434 (Ollama API, silent) and 8501 (Streamlit, opens later).
 7. Start with [**Lab 1**](Lab_1_Hello_LLMs/README.md).
 
-> **On GitHub Pro?** There's a second configuration — *"AutoCon 5 AI Workshop — GitHub Pro (larger machine)"* — that adds the **Open WebUI** chat GUI (used in Lab 1 Step 6) and runs on a larger 8-core machine. To use it, choose **Codespaces → ⋯ → New with options…** and pick that configuration from the **Dev container configuration** dropdown. It requires a machine size beyond the free tier, so most attendees should stick with the default above.
+> **Want a snappier experience? (optional — GitHub Pro)** The default above is free and runs every lab. If you have GitHub Pro (or any plan that allows a larger machine), there's a second configuration — *"AutoCon 5 AI Workshop — GitHub Pro (larger machine)"* — that runs on an **8-core / 32 GB** machine (noticeably faster, especially Lab 3's live network sim + local LLM running together) and adds the **Open WebUI** chat GUI (Lab 1 Step 6). Pick it via **Codespaces → ⋯ → New with options…** → the **Dev container configuration** dropdown. Purely optional — the free default is fully sufficient.
 
 ## A note on Codespaces billing
 

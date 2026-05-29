@@ -31,6 +31,12 @@ If you do hit the limit mid-workshop, paying a small overage (~$0.18/hour for a 
 
 ---
 
+**Do I need GitHub Pro? Is there a "nicer" setup?**
+
+No — the free default works for the entire workshop. But if you have GitHub Pro (or any paid plan that unlocks larger machines), you can opt into a second configuration, *"AutoCon 5 AI Workshop — GitHub Pro (larger machine)"*, that runs on an 8-core / 32 GB machine instead of the free 4-core / 16 GB one. It's noticeably snappier (especially Lab 3, where the network sim and a local LLM run side by side) and adds the **Open WebUI** chat GUI from Lab 1 Step 6. Pick it by choosing **New with options…** at launch and selecting it from the **Dev container configuration** dropdown. Totally optional — the free default is sufficient.
+
+---
+
 **Which cloud LLM provider do I need an account with?**
 
 **OpenAI.** Sign up at [platform.openai.com](https://platform.openai.com) and add **$5 USD** as prepaid credit before the workshop.
