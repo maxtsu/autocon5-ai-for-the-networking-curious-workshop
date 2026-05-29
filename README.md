@@ -39,11 +39,13 @@ See [WORKSHOP_FAQ.md](WORKSHOP_FAQ.md) for the full pre-workshop checklist.
 
 1. Click the green **Code** button at the top of this page.
 2. Switch to the **Codespaces** tab → **Create codespace on main**.
-3. When prompted for machine type, pick **4-core / 16 GB / 64 GB**. The smaller tiers don't have enough memory for SR Linux + Ollama + the rest of the stack.
-4. Wait **5-8 minutes** for the first boot. The image is ~7 GB, so first-time pull takes a moment. Subsequent restarts of the same Codespace are much faster.
-5. When you see the **welcome banner** in the terminal (starts with `==================================================` and ends with sanity-check commands), you're ready. Make sure the banner says both SR Linux and Open WebUI images loaded — that's how you know the Codespace finished setup successfully.
-6. In VS Code's **Ports** panel (bottom of the screen), you should see three ports forwarded: 11434 (Ollama API, silent), 8501 (Streamlit, opens later), and 8080 (**Open WebUI** — auto-opens a preview pane).
+3. When prompted for machine type, pick **4-core / 16 GB / 32 GB** (the free tier). The 2-core tier doesn't have enough memory for SR Linux + Ollama + the rest of the stack.
+4. Wait **5-8 minutes** for the first boot. The image is pulled once; subsequent restarts of the same Codespace are much faster.
+5. When you see the **welcome banner** in the terminal (starts with `==================================================` and ends with sanity-check commands), you're ready. The banner confirms the SR Linux image loaded — that's how you know the Codespace finished setup successfully.
+6. In VS Code's **Ports** panel (bottom of the screen), you should see two ports forwarded: 11434 (Ollama API, silent) and 8501 (Streamlit, opens later).
 7. Start with [**Lab 1**](Lab_1_Hello_LLMs/README.md).
+
+> **On GitHub Pro?** There's a second configuration — *"AutoCon 5 AI Workshop — GitHub Pro (larger machine)"* — that adds the **Open WebUI** chat GUI (used in Lab 1 Step 6) and runs on a larger 8-core machine. To use it, choose **Codespaces → ⋯ → New with options…** and pick that configuration from the **Dev container configuration** dropdown. It requires a machine size beyond the free tier, so most attendees should stick with the default above.
 
 ## A note on Codespaces billing
 
@@ -61,7 +63,7 @@ When you boot, you get:
 
 - **Python 3.11** with LangChain, OpenAI, Streamlit, Ollama, Pydantic, and the supporting libraries pre-installed
 - **Ollama** with `llama3.2:3b` already pulled into the image — no model download needed at boot
-- **Open WebUI** v0.9.5 — chat GUI for Ollama, auto-starts during boot, available at port 8080
+- **Open WebUI** v0.9.5 — chat GUI for Ollama on port 8080 *(GitHub Pro image only; the default image uses the `ollama run` CLI instead)*
 - **Containerlab** 0.74.3 for spinning up the network topology
 - **SR Linux** 25.10.2 image baked in — three nodes (`r1`, `r2`, `r3`) running OSPF + iBGP + eBGP
 - All the **lab content** — READMEs and pre-built Python scripts for each lab
@@ -101,10 +103,10 @@ Bonus discussion topics (MCP, agents in production, real RAG, where this all goe
 Common, harmless. Docker is usually already running by the time you see this. Open a new terminal in VS Code and run `docker info` — if you get version info back, the daemon is up and the progress dialog is just stale. Dismiss it.
 
 **The welcome banner never appears**
-postCreate.sh probably failed. Open the terminal panel, look for errors. The most common cause is a transient image-load failure — run `docker images` to check whether SR Linux and Open WebUI both loaded.
+postCreate.sh probably failed. Open the terminal panel, look for errors. The most common cause is a transient image-load failure — run `docker images` to check whether SR Linux loaded (and Open WebUI too, if you're on the GitHub Pro image).
 
-**Open WebUI shows up but the model dropdown is empty**
-Ollama isn't running yet. In any terminal: `ollama serve > /tmp/ollama.log 2>&1 &`, then refresh the Open WebUI page. (Lab 1 covers this explicitly — feel free to skip ahead to that step if it's bothering you.)
+**(GitHub Pro image) Open WebUI shows up but the model dropdown is empty**
+Ollama isn't running yet. In any terminal: `ollama serve > /tmp/ollama.log 2>&1 &`, then refresh the Open WebUI page. (Lab 1 covers this explicitly — feel free to skip ahead to that step if it's bothering you.) On the default image there's no Open WebUI — chat from the CLI with `ollama run llama3.2:3b`.
 
 **Streamlit pages fail to render in VS Code's Simple Browser**
 Open the forwarded port in a *real* browser instead: in the Ports panel, click the globe icon next to port 8501. Simple Browser's sandboxing breaks Streamlit's WebSocket connection; a real browser tab works fine.

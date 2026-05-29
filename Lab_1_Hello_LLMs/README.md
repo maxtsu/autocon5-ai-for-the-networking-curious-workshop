@@ -6,7 +6,7 @@ Make your first calls to a local LLM (Ollama running `llama3.2:3b`) and a cloud 
 
 - A working sense of how local vs. cloud LLMs differ in speed, quality, and cost
 - Three small Python scripts that call each provider, including one that switches providers with a single line of code
-- Hands-on time in Open WebUI — a chat GUI that talks to your local Ollama
+- Hands-on time chatting with your local Ollama model from the CLI (and, on the GitHub Pro image, in the Open WebUI chat GUI)
 
 This lab doesn't touch the network topology — it's purely about getting comfortable calling LLMs.
 
@@ -226,11 +226,15 @@ This is the abstraction we'll lean on in Labs 2-4. Application code doesn't need
 
 ---
 
-## Step 6: The chat GUI — Open WebUI
+## Step 6: A chat interface for your local model
 
-For exploration (as opposed to scripting), a chat GUI is often nicer than the CLI. Open WebUI is already running in this Codespace.
+For exploration (as opposed to scripting), an interactive chat is often nicer than one-shot CLI calls. How you get one depends on which Codespace you launched.
 
-In VS Code's **Ports** panel (bottom of the screen, click "Ports" tab if you don't see it):
+> 🔶 **GitHub Pro image only:** the Open WebUI graphical chat below runs only on the **GitHub Pro** Codespace. If you launched the **default** Codespace, skip to *"Default image — chat from the CLI"* further down.
+
+### GitHub Pro image — Open WebUI (graphical)
+
+Open WebUI is already running in this Codespace. In VS Code's **Ports** panel (bottom of the screen, click "Ports" tab if you don't see it):
 
 1. Find port **8080** labeled **"Open WebUI"**.
 2. It probably already auto-opened in a preview pane. If not, click the globe icon next to port 8080 to open in browser.
@@ -242,6 +246,16 @@ In Open WebUI:
 
 The responses stream the same way as Steps 2-3, but with conversation history you can scroll through. This is just a UI on top of the same Ollama daemon you've been using; if you stopped Ollama with `pkill ollama`, the UI would also stop working.
 
+### Default image — chat from the CLI
+
+No GUI, but `ollama run` gives you an interactive REPL against the same `llama3.2:3b` daemon:
+
+```bash
+ollama run llama3.2:3b
+```
+
+Type a prompt, hit enter, and chat back and forth; type `/bye` (or Ctrl-D) to exit. It's the same model and the same streaming behavior as the GUI — just in the terminal. (Want the graphical version? It ships on the **GitHub Pro** Codespace — see the note at the top of this step.)
+
 ---
 
 ## Going Further
@@ -250,7 +264,9 @@ If you finish the core lab early — or want to dig deeper later — try one or 
 
 ### 1. A bigger Ollama model
 
-`llama3.2:3b` is small and fast. `llama3.1:8b` is roughly 2-3x bigger and noticeably stronger — Meta's previous-generation 8B sits in the sweet spot of "fits in a 16GB Codespace, meaningfully better on network reasoning."
+> 🔶 **GitHub Pro image only:** this pulls an extra ~4.7 GB model. The default Codespace (32 GB) is kept lean and doesn't have headroom for it — do this on the **GitHub Pro** Codespace (or any box with more disk).
+
+`llama3.2:3b` is small and fast. `llama3.1:8b` is roughly 2-3x bigger and noticeably stronger on network reasoning.
 
 ```bash
 ollama pull llama3.1:8b   # ~4.7 GB download, 1-2 min on Codespace network
@@ -298,7 +314,7 @@ def ask(llm):
 
 Re-run `python Lab_1_Hello_LLMs/compare.py`. You'll see Ollama's response appear word-by-word in real time, then OpenAI's. The `text` value returned by `ask()` is still the full response, so the existing `print(text)` line below the loop will redundantly re-print each answer after streaming — that's fine for the demo (and confirms the chunks were captured), or you can delete that line for a cleaner output.
 
-**Why this matters:** streaming doesn't make the model faster — total elapsed time is the same. What it changes is *perceived* latency: the user sees motion immediately instead of staring at a frozen prompt for 3 seconds. Every chat UI you've ever used (ChatGPT, Claude, Open WebUI in Step 5) does this.
+**Why this matters:** streaming doesn't make the model faster — total elapsed time is the same. What it changes is *perceived* latency: the user sees motion immediately instead of staring at a frozen prompt for 3 seconds. Every chat UI you've ever used (ChatGPT, Claude, Open WebUI in Step 6) does this.
 
 ### 4. Median latency, not single-shot
 

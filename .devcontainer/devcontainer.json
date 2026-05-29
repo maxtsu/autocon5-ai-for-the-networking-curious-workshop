@@ -1,7 +1,7 @@
 {
     "name": "AutoCon 5 AI Workshop",
-    // Pre-built image from GHCR. Pinned to :latest for ongoing dev;
-    // could swap to a date tag (e.g., :2026.05.08) for a frozen release.
+    // Pre-built image from GHCR. :latest = the DEFAULT (slim) image — no
+    // Open WebUI. Pin to a date tag (e.g. :slim-2026.06.01) for a frozen release.
     "image": "ghcr.io/ericchou1/autocon5-ai-workshop:latest",
     // Features layered on at Codespace startup (after image pull).
     // - docker-in-docker: provides a Docker daemon inside the Codespace,
@@ -17,12 +17,11 @@
             "version": "latest"
         }
     },
-    // Forward Ollama, Streamlit, and Open WebUI ports out of the Codespace
-    // so attendees can access them from their browser.
+    // Forward Ollama and Streamlit ports out of the Codespace.
+    // (Open WebUI / 8080 is forwarded only on the GitHub Pro config.)
     "forwardPorts": [
         11434,
-        8501,
-        8080
+        8501
     ],
     "portsAttributes": {
         "11434": {
@@ -32,22 +31,19 @@
         "8501": {
             "label": "Streamlit",
             "onAutoForward": "openPreview"
-        },
-        "8080": {
-            "label": "Open WebUI",
-            "onAutoForward": "openPreview"
         }
     },
     // Runs once when the Codespace is first created. Loads pre-baked
     // images into Docker, seeds .env from .env.example, starts Open WebUI,
     // prints welcome banner.
     "postCreateCommand": "bash postCreate.sh",
-    // Recommended machine size. Codespaces prompts the user to pick a
-    // size on first launch; this is the minimum we want them to choose.
+    // Minimum machine spec. hostRequirements is a *floor* — Codespaces greys
+    // out anything smaller. 32gb keeps the free-tier 4-core/16GB/32GB machine
+    // selectable (64gb would force a paid >=8-core box).
     "hostRequirements": {
         "cpus": 4,
         "memory": "16gb",
-        "storage": "64gb"
+        "storage": "32gb"
     },
     // Standard Codespace workspace mount path.
     // ${localWorkspaceFolderBasename} resolves to the repo name.

@@ -5,10 +5,12 @@
 # Responsibilities:
 #  1. Wait for Docker daemon (docker-in-docker feature) to be ready
 #  2. Load SR Linux image from baked-in tarball
-#  3. Load Open WebUI image from baked-in tarball
+#  3. Load Open WebUI image — ONLY on the "GitHub Pro" image (tarball present)
 #  4. Seed .env from .env.example if missing
-#  5. Start Open WebUI container
-#  6. Print welcome banner
+#  5. Start Open WebUI container — ONLY on the "GitHub Pro" image
+#  6. Print welcome banner (variant-aware)
+#
+# One script serves BOTH images; it detects which by /opt/images/open-webui.tar.
 
 set -euo pipefail
 
@@ -32,6 +34,14 @@ for i in $(seq 1 30); do
 done
 
 # ---------------------------------------------------------------------------
+# Detect image variant: the GitHub Pro image bakes in open-webui.tar; the
+# default (slim) image does not. Everything Open-WebUI-related is gated on this.
+# ---------------------------------------------------------------------------
+WEBUI_TAR="/opt/images/open-webui.tar"
+HAS_WEBUI=false
+[ -f "$WEBUI_TAR" ] && HAS_WEBUI=true
+
+# ---------------------------------------------------------------------------
 # 2. Load SR Linux image from baked-in tarball
 # ---------------------------------------------------------------------------
 SRLINUX_TAR="/opt/images/srlinux.tar"
@@ -49,21 +59,16 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 3. Load Open WebUI image from baked-in tarball
+# 3. Load Open WebUI image — GitHub Pro image only
 # ---------------------------------------------------------------------------
-WEBUI_TAR="/opt/images/open-webui.tar"
-
-if [ -f "$WEBUI_TAR" ]; then
+if [ "$HAS_WEBUI" = true ]; then
     echo ""
     echo "==> Loading Open WebUI image from $WEBUI_TAR..."
     docker load -i "$WEBUI_TAR"
     echo ""
     docker images ghcr.io/open-webui/open-webui
-else
-    echo ""
-    echo "WARNING: $WEBUI_TAR not found."
-    echo "         GUI chat interface won't be available."
 fi
+# (Default/slim image has no open-webui.tar — nothing to load. Not an error.)
 
 # ---------------------------------------------------------------------------
 # 4. Seed .env from .env.example if missing
@@ -81,47 +86,56 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 5. Start Open WebUI container
+# 5. Start Open WebUI container — GitHub Pro image only
 #
 # Wrapped in `if ! ...` so a failure here doesn't halt postCreate.sh — the
 # workshop must remain usable even if the GUI hiccups. Attendees can always
 # run scripts/start-webui.sh manually later.
 # ---------------------------------------------------------------------------
-echo ""
-echo "==> Starting Open WebUI..."
-if [ -f scripts/start-webui.sh ]; then
-    if ! bash scripts/start-webui.sh; then
-        echo "    WARNING: Open WebUI failed to start — continuing without GUI."
-        echo "             Try 'bash scripts/start-webui.sh' manually later."
+if [ "$HAS_WEBUI" = true ]; then
+    echo ""
+    echo "==> Starting Open WebUI..."
+    if [ -f scripts/start-webui.sh ]; then
+        if ! bash scripts/start-webui.sh; then
+            echo "    WARNING: Open WebUI failed to start — continuing without GUI."
+            echo "             Try 'bash scripts/start-webui.sh' manually later."
+        fi
+    else
+        echo "    scripts/start-webui.sh not found; skipping GUI startup."
     fi
-else
-    echo "    scripts/start-webui.sh not found; skipping GUI startup."
 fi
 
 # ---------------------------------------------------------------------------
-# 6. Welcome banner
+# 6. Welcome banner (variant-aware)
 # ---------------------------------------------------------------------------
-cat <<'EOF'
-
-==================================================
-  AutoCon 5 AI Workshop — environment ready!
-==================================================
-
-Quick sanity checks:
-  ollama --version           # expect 0.23.1
-  containerlab version       # expect 0.74.3
-  docker images              # SR Linux + Open WebUI should be listed
-
-Open WebUI (chat GUI for Ollama):
-  → http://localhost:8080
-  → VS Code auto-opens this in the 'Ports' panel preview pane.
-  → Models appear once 'ollama serve' is running (covered in Lab 1).
-
-Next steps:
-  1. Edit .env to add your OpenAI API key
-  2. See README.md for the lab walkthrough order
-  3. Workshop FAQ: WORKSHOP_FAQ.md
-
-==================================================
-
-EOF
+echo ""
+echo "=================================================="
+echo "  AutoCon 5 AI Workshop — environment ready!"
+echo "=================================================="
+echo ""
+echo "Quick sanity checks:"
+echo "  ollama --version           # expect 0.23.1"
+echo "  containerlab version       # expect 0.74.3"
+if [ "$HAS_WEBUI" = true ]; then
+    echo "  docker images              # SR Linux + Open WebUI should be listed"
+    echo ""
+    echo "Open WebUI (chat GUI for Ollama):"
+    echo "  -> http://localhost:8080"
+    echo "  -> VS Code auto-opens this in the 'Ports' panel preview pane."
+    echo "  -> Models appear once 'ollama serve' is running (covered in Lab 1)."
+else
+    echo "  docker images              # SR Linux should be listed"
+    echo ""
+    echo "Local LLM chat is via the CLI on this image:"
+    echo "  -> ollama serve >/tmp/ollama.log 2>&1 &   # start the daemon"
+    echo "  -> ollama run llama3.2:3b \"Explain BGP in one sentence.\""
+    echo "  (The Open WebUI GUI is on the GitHub Pro image — see Lab 1 Step 6.)"
+fi
+echo ""
+echo "Next steps:"
+echo "  1. Edit .env to add your OpenAI API key"
+echo "  2. See README.md for the lab walkthrough order"
+echo "  3. Workshop FAQ: WORKSHOP_FAQ.md"
+echo ""
+echo "=================================================="
+echo ""
