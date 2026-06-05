@@ -360,7 +360,25 @@ head -25 Lab_3_LangChain_Network_Agent/sample_data/r1_bgp.txt
 
 `ssh` prompts for the password on your terminal, so you'll be asked three times (once per node) — just type `NokiaSrl1!` each time.
 
-> **Optional shortcut — `sshpass`.** If `sshpass` happens to be installed in your environment, you can skip the prompts by wrapping each call: `sshpass -p 'NokiaSrl1!' ssh -o StrictHostKeyChecking=no admin@clab-autocon5-${NODE} ...`. It isn't guaranteed to be present, so the password-prompt loop above is the path we rely on. (If you'd rather, you can also SSH into each node by hand, run the show command, and paste the output into the three `${NODE}_bgp.txt` files — same result.)
+> **Optional shortcut — `sshpass`.** To skip the per-node password prompts, install `sshpass` and let it supply the password for you. Install it once in your Codespace:
+>
+> ```bash
+> sudo apt-get update && sudo apt-get install -y sshpass
+> ```
+>
+> Then run the capture loop with `sshpass` wrapping each `ssh` call (no prompts):
+>
+> ```bash
+> cd /workspaces/autocon5-ai-workshop
+>
+> for NODE in r1 r2 r3; do
+>     sshpass -p 'NokiaSrl1!' ssh -o StrictHostKeyChecking=no admin@clab-autocon5-${NODE} \
+>         "show network-instance default protocols bgp neighbor" \
+>         > Lab_3_LangChain_Network_Agent/sample_data/${NODE}_bgp.txt
+> done
+> ```
+>
+> Either path gives the same result — use whichever you prefer. (You can also SSH into each node by hand, run the show command, and paste the output into the three `${NODE}_bgp.txt` files.)
 
 **Expected:** real BGP neighbor tables with the full column set — including `Uptime`, `AFI/SAFI`, and `[Rx/Active/Tx]` counters that weren't in the canned versions. Remember the note in Step 1 about trimming those columns? Now you've got them back.
 
