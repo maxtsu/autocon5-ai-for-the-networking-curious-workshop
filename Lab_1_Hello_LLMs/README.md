@@ -167,7 +167,9 @@ Compare against Step 3:
 
 Here's the punchline of this lab: with LangChain, the exact same Python code can drive either provider. You swap them by changing the constructor.
 
-Create `compare.py` in this lab folder:
+> **Heads up — this file is already in the repo.** `compare.py` is here in this lab folder as a reference starting point. Open it and follow along with the walkthrough below, or, if you want the challenge, delete it and write it yourself from the steps. Either way works.
+
+Here's `compare.py`:
 
 ```python
 """
@@ -286,7 +288,7 @@ The decision between them is rarely "which is better" and usually "which is good
 
 Both providers support streaming. Instead of getting the whole response at once with `llm.invoke(...)`, you get chunks as the model generates them — useful for chatty UIs where the user sees text appear word-by-word instead of waiting in silence.
 
-In `compare.py`, the `ask()` function currently looks like this (lines 16-21):
+In `compare.py`, the `ask()` function near the top of the file currently looks like this:
 
 ```python
 def ask(llm):
@@ -312,7 +314,13 @@ def ask(llm):
     return "".join(chunks), elapsed
 ```
 
-Re-run `python Lab_1_Hello_LLMs/compare.py`. You'll see Ollama's response appear word-by-word in real time, then OpenAI's. The `text` value returned by `ask()` is still the full response, so the existing `print(text)` line below the loop will redundantly re-print each answer after streaming — that's fine for the demo (and confirms the chunks were captured), or you can delete that line for a cleaner output.
+**Now re-run it:**
+
+```bash
+python Lab_1_Hello_LLMs/compare.py
+```
+
+You'll see Ollama's response appear word-by-word in real time, then OpenAI's. The `text` value returned by `ask()` is still the full response, so the existing `print(text)` line below the loop will redundantly re-print each answer after streaming — that's fine for the demo (and confirms the chunks were captured), or you can delete that line for a cleaner output.
 
 **Why this matters:** streaming doesn't make the model faster — total elapsed time is the same. What it changes is *perceived* latency: the user sees motion immediately instead of staring at a frozen prompt for 3 seconds. Every chat UI you've ever used (ChatGPT, Claude, Open WebUI in Step 6) does this.
 
@@ -320,7 +328,7 @@ Re-run `python Lab_1_Hello_LLMs/compare.py`. You'll see Ollama's response appear
 
 Right now `compare.py` calls `ask()` once per provider. A single slow call — model cold-start, garbage-collection pause, a network blip — skews the elapsed-time number. Median across multiple runs is more honest.
 
-Modify the comparison loop at the bottom of `compare.py` (lines 28-35). Replace it with this version that runs each prompt N times and reports the median:
+Modify the comparison loop at the bottom of `compare.py` (the `for llm, label in [...]` block). Replace it with this version that runs each prompt N times and reports the median:
 
 ```python
 import statistics
@@ -377,19 +385,19 @@ The `load_dotenv()` call at the top of `compare.py` auto-reads this into environ
 
 **Step 4: Add three lines to `compare.py`.**
 
-a) Add the import near the other LangChain imports (after line 8):
+a) Add the import alongside the other LangChain imports (next to `ChatOllama` / `ChatOpenAI`):
 
 ```python
 from langchain_anthropic import ChatAnthropic
 ```
 
-b) Add the constructor next to `ollama` and `openai` (after line 26):
+b) Add the constructor next to where `ollama` and `openai` are created:
 
 ```python
 anthropic = ChatAnthropic(model="claude-haiku-4-5", temperature=0)
 ```
 
-c) Add a third entry to the comparison loop (line 30-31):
+c) Add a third entry to the comparison loop (the `for llm, label in [...]` list):
 
 ```python
 for llm, label in [(ollama, "Ollama / llama3.2:3b"),

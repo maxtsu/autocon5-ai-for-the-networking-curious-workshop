@@ -47,6 +47,15 @@ See [WORKSHOP_FAQ.md](WORKSHOP_FAQ.md) for the full pre-workshop checklist.
 
 > **Want a snappier experience? (optional — GitHub Pro)** The default above is free and runs every lab. If you have GitHub Pro (or any plan that allows a larger machine), there's a second configuration — *"AutoCon 5 AI Workshop — GitHub Pro (larger machine)"* — that runs on an **8-core / 32 GB** machine (noticeably faster, especially Lab 3's live network sim + local LLM running together) and adds the **Open WebUI** chat GUI (Lab 1 Step 6). Pick it via **Codespaces → ⋯ → New with options…** → the **Dev container configuration** dropdown. Purely optional — the free default is fully sufficient.
 
+## Workshop day — how we'll run the session
+
+The Codespace takes 5–8 minutes to build on first boot, so on workshop day we'll start it right away and use the wait productively. Here's the opening sequence we'll do together:
+
+1. **Everyone kick off your Codespace now.** Follow [Launch your Codespace](#launch-your-codespace) above. Don't just click and look away — watch that the build actually *starts*, then **click into the build log** (the "Building codespace…" / "View logs" link) to confirm it's making progress. If yours has stalled or errored, flag it now while we can fix it together, not 20 minutes in.
+2. **No OpenAI account yet?** While the image builds, head to [platform.openai.com](https://platform.openai.com), create an account, and **add the $5 prepaid credit** (see [Prerequisites](#prerequisites) — Lab 1 fails without funded credit). Takes a couple of minutes; the build runs in the background.
+3. **Optional — want to try Anthropic too?** If you'd like to compare Claude against OpenAI later (Lab 1's "Going further" #5), grab an Anthropic API key now at [console.anthropic.com](https://console.anthropic.com) — they include $5 in starter credits. Purely optional; OpenAI is all you need for the core labs.
+4. **Still building?** Good — we'll start the **Lab 1 "Concepts" section** together while the image finishes. No need for a running Codespace to follow along with the concepts; by the time we reach the first hands-on step, your environment will be ready.
+
 ## A note on Codespaces billing
 
 Short answer: **a 4-hour workshop on a free GitHub account does not cost you anything.**
