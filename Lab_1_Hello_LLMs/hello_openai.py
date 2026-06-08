@@ -2,6 +2,9 @@ from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv()  # reads .env, sets OPENAI_API_KEY in environment
+
+print(env)
+
 client = OpenAI()
 
 response = client.chat.completions.create(
