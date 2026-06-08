@@ -42,8 +42,8 @@ if __name__ == "__main__":
     questions = [
         "What is BGP?",                              # General — should not call any tool
         "What's BGP looking like on r1?",            # Specific — single tool call
-        # "Is r3 peering with r1?",                    # Specific — needs reasoning over result
-        # "Compare BGP state between r1 and r3.",      # Should call the tool twice
+        "Is r3 peering with r1?",                    # Specific — needs reasoning over result
+        "Compare BGP state between r1 and r3.",      # Should call the tool twice
     ]
 
     for q in questions:
